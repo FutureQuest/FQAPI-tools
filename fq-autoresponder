@@ -1,0 +1,152 @@
+#! /usr/bin/python2
+from __future__ import print_function
+import grp, os, pwd, sys, time
+
+import fqapi
+
+program = 'fq-autoresponder'
+client = fqapi.LocalClient()
+
+DEFAULT_MSGLIMIT = 1
+DEFAULT_TIMELIMIT = 3600
+MAX_MSGLIMIT = 3
+MIN_TIMELIMIT = 3600
+
+def msg(*args):
+    print('{}: {}'.format(program, ' '.join(map(str, args))))
+
+def error(*args):
+    msg('Error:', *args)
+
+def die(x, *args):
+    msg('Fatal Error:', *args)
+    sys.exit(x)
+
+def usage(*msg):
+    if msg:
+        error(*msg)
+    print("To see what autoresponders are in place, use:\n"
+          " ",program,"list")
+    print("To see what the current autoresponder is, use:\n"
+          " ",program,"get ACCOUNT")
+    print("To show when the responses have been sent, use:\n"
+          " ",program,"log ACCOUNT")
+    print("To delete the autoresponder, use:\n"
+          " ",program,"drop ACCOUNT")
+    print("To set up or modify an autoresponder, use:\n"
+          " ",program,"set ACCOUNT INCLUDE FROM-NAME FROM-ACCT SUBJECT [MSG-LIMIT TIME-LIMIT]\n"
+          "The body of the response must be fed in on standard input for the 'set' command.")
+    sys.exit(111)
+
+def validate(s, name, chars):
+    if '\n' in s:
+        die(1, name + ' contained newline characters')
+    for char in chars:
+        if char in s:
+            die(1, name + ' contained invalid characters')
+
+def request(method, path, data=None):
+    try:
+        code, msg, data = client.request(method, path, data)
+    except fqapi.Error as e:
+        if e.code == 404:
+            die(1, 'No such autoresponder')
+        die(1, 'API returned error', e.code, e.msg)
+    return data
+
+def do_list():
+    data = request('GET', '/1/email/autoresponders')
+    for ar in data['autoresponders']:
+        print(ar['name'])
+
+def do_get(acct):
+    data = request('GET', '/1/email/autoresponders/{}'.format(acct))
+    print('Copy message:', 'Yes' if data['copy_msg'] else 'No')
+    print('Time limit:', data['time_limit'])
+    print('Message limit:', data['msg_limit'])
+    print('Response message follows.')
+    print()
+    print('From: "{}" <{}@{}>'.format(data['from_name'], data['from_user'], domain))
+    print('Subject:', data['subject'])
+    print()
+    print(data['response'].rstrip())
+
+def do_log(acct):
+    data = request('GET', '/1/email/autoresponders/{}/log'.format(acct))
+    log = data['log']
+    if log:
+        print('     Timestamp      Response? Email')
+        for entry in log:
+            ts = time.strptime(entry['timestamp'], '%Y-%m-%dT%H:%M:%S')
+            print('{}    {:3}    {}'.format(
+                time.strftime('%Y-%m-%d %H:%M:%S', ts),
+                'Yes' if entry['sent_response'] else 'No',
+                entry['sender']))
+    else:
+        msg("There are no recent log entries for the '{}' autoresponder.".format(acct))
+
+def do_drop(acct):
+    request('DELETE', '/1/email/autoresponders/{}'.format(acct))
+    print("Autoresponder for '{}' has been dropped".format(acct))
+
+def do_set(acct, include, from_name, from_acct, subject, msg_limit=DEFAULT_MSGLIMIT, time_limit=DEFAULT_TIMELIMIT):
+    try:
+        msg_limit = int(msg_limit)
+    except:
+        die(1, msg_limit, 'is not a valid number')
+    if msg_limit > MAX_MSGLIMIT:
+        die(1, 'Message limit is too large')
+    try:
+        time_limit = int(time_limit)
+    except:
+        die1(1, time_limit, 'is not a valid number')
+    if time_limit < MIN_TIMELIMIT:
+        die(1, 'Time limit is too small')
+    opt_copy = include.startswith('1') or include.startswith('y') or include.startswith('Y')
+
+    accounts = request('GET', '/1/email/accounts')
+    accounts = dict([ (a['name'], a) for a in accounts['accounts'] ])
+    if not acct in accounts:
+        die(1, "Account '{}' does not appear to exist".format(acct));
+
+    body = sys.stdin.read()
+
+    request('PUT', '/1/email/autoresponders/{}'.format(acct), {
+        'from_user': from_acct,
+        'from_name': from_name,
+        'response': body,
+        'subject': subject,
+        'msg_limit': msg_limit,
+        'time_limit': time_limit,
+        })
+    msg("Autoresponder for '{}' updated".format(acct))
+
+if len(sys.argv) == 2 and sys.argv[1] == 'list':
+    do_list()
+    exit(0)
+if len(sys.argv) < 3:
+    usage('Incorrect usage')
+
+# Figure out domain name
+xdom = grp.getgrgid(os.getgid()).gr_name
+domain = pwd.getpwuid(os.getuid()).pw_gecos
+
+cmd = sys.argv[1]
+acct = sys.argv[2]
+validate(acct, 'Account name', '\\\"@;')
+
+if cmd == 'get':
+    do_get(acct)
+elif cmd == 'log':
+    do_log(acct)
+elif cmd == 'drop':
+    do_drop(acct)
+elif cmd == 'set':
+    if len(sys.argv) == 7:
+        do_set(acct, *sys.argv[3:7])
+    elif len(sys.argv) == 9:
+        do_set(acct, *sys.argv[3:9])
+    else:
+        usage('Wrong number of command-line arguments for the "set" command')
+else:
+    usage('Unknown command "{}"'.format(cmd))

@@ -1,0 +1,16 @@
+#! /usr/bin/python2
+from __future__ import print_function
+
+import argparse
+parser = argparse.ArgumentParser(description='Change a forwarding alias in your mail accounts.')
+parser.add_argument('username', metavar='USERNAME', type=str)
+parser.add_argument('addresses', metavar='ADDRESS', type=str, nargs='*')
+args = parser.parse_args()
+
+import fqapi
+client = fqapi.LocalClient()
+
+client.request('PUT', '/1/email/accounts/{}'.format(args.username), {
+    'forwards': args.addresses,
+    })
+print("vchalias: User '{}' successfully changed.".format(args.username))

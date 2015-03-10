@@ -1,0 +1,25 @@
+#! /usr/bin/python2
+from __future__ import print_function
+
+import argparse
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('username', metavar='USERNAME', type=str)
+parser.add_argument('addresses', metavar='ADDRESS', type=str, nargs='*')
+args = parser.parse_args()
+
+import fqapi
+client = fqapi.LocalClient()
+
+_, _, accounts = client.request('GET', '/1/email/accounts')
+accounts = dict([ (a['name'], a) for a in accounts['accounts'] ])
+
+if args.username in accounts:
+    print("vaddalias: error: user '{}' already exists.".format(args.username))
+    exit(1)
+
+client.request('PUT', '/1/email/accounts/{}'.format(args.username), {
+    'name': args.username,
+    'forwards': args.addresses,
+    'mailbox-enabled': False,
+    })
+print("vaddalias: user '{}' successfully added".format(args.username))

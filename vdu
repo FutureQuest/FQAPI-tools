@@ -1,0 +1,31 @@
+#! /usr/bin/python2
+from __future__ import print_function
+
+import argparse
+parser = argparse.ArgumentParser(description='Calculate disk usage of a mail account.')
+parser.add_argument('--all', '-a', action='store_true',
+                    help='Show all folders separately')
+parser.add_argument('usernames', metavar='USERNAME', type=str, nargs='*')
+args = parser.parse_args()
+
+import fqapi
+client = fqapi.LocalClient()
+
+def one_du(name, du):
+    if ' ' in name or '"' in name:
+        name = '"{}"'.format(name.replace('"', '""'))
+    return '{} {new[count]} {new[size]} {old[count]} {old[size]} {read[count]} {read[size]} {overhead}'.format(name, **du)
+
+def show_du(name, du):
+    if args.all:
+	results = [ one_du(name, du['inbox']) ]
+        for name, duf in du['folders'].items():
+            results.append(one_du(name, duf))
+    else:
+        results = [ one_du(name, du['totals']) ]
+    print(*results)
+
+_, _, data = client.request('GET', '/1/email/disk-usage')
+du = data['disk-usage']
+for name in args.usernames or du:
+        show_du(name, du[name])

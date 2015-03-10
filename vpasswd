@@ -1,0 +1,29 @@
+#! /usr/bin/python2
+from __future__ import print_function
+import getpass, os
+
+import argparse
+parser = argparse.ArgumentParser(description='Change the password of a mail account.')
+parser.add_argument('username', metavar='USERNAME', type=str)
+args = parser.parse_args()
+
+import fqapi
+client = fqapi.LocalClient()
+
+if os.isatty(0):
+    pass1 = getpass.getpass("Enter the user's new password: ")
+    pass2 = getpass.getpass("Please type it again for verification: ")
+    if pass1 != pass2:
+        print("vpasswd: error: passwords don't match")
+        exit(1)
+else:
+    pass1 = raw_input()
+
+if pass1 == "":
+    print("vpasswd: error: password is empty")
+    exit(1)
+
+client.request('PUT', '/1/email/accounts/{}'.format(args.username), {
+    'password': pass1,
+    })
+print("vpasswd: Password for user '{}' successfully changed.".format(args.username))
