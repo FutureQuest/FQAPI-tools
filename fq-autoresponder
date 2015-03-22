@@ -133,7 +133,7 @@ domain = pwd.getpwuid(os.getuid()).pw_gecos
 
 cmd = sys.argv[1]
 acct = sys.argv[2]
-validate(acct, 'Account name', '\\\"@;')
+validate(acct, 'Account name', '/\\\"@;')
 
 if cmd == 'get':
     do_get(acct)
