@@ -10,11 +10,16 @@ args = parser.parse_args()
 import fqapi
 client = fqapi.LocalClient()
 
-_, _, accounts = client.request('GET', '/1/email/accounts')
-accounts = dict([ (a['name'], a) for a in accounts['accounts'] ])
-
-if args.username in accounts:
-    print("vaddalias: error: user '{}' already exists.".format(args.username))
+if '/' in args.username:
+    print('vaddalias: Invalid username:', args.username)
+    exit(1)
+try:
+    client.request('GET', '/1/email/accounts/{}'.format(args.username))
+except Error as e:
+    if e.code == 404:
+        print('vaddalias: Invalid username:', args.username)
+    else:
+        print('vaddalias: API Error:', e.code, e.msg)
     exit(1)
 
 client.request('PUT', '/1/email/accounts/{}'.format(args.username), {

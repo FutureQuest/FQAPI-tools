@@ -10,6 +10,18 @@ args = parser.parse_args()
 import fqapi
 client = fqapi.LocalClient()
 
+if '/' in args.username:
+    print('vchalias: Invalid username:', args.username)
+    exit(1)
+try:
+    client.request('GET', '/1/email/accounts/{}'.format(args.username))
+except Error as e:
+    if e.code == 404:
+        print('vchalias: Invalid username:', args.username)
+    else:
+        print('vchalias: API Error:', e.code, e.msg)
+    exit(1)
+
 client.request('PUT', '/1/email/accounts/{}'.format(args.username), {
     'forwards': args.addresses,
     })

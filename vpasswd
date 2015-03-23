@@ -10,6 +10,18 @@ args = parser.parse_args()
 import fqapi
 client = fqapi.LocalClient()
 
+if '/' in args.username:
+    print('vpasswd: Invalid username:', args.username)
+    exit(1)
+try:
+    client.request('GET', '/1/email/accounts/{}'.format(args.username))
+except Error as e:
+    if e.code == 404:
+        print('vpasswd: Invalid username:', args.username)
+    else:
+        print('vpasswd: API Error:', e.code, e.msg)
+    exit(1)
+
 if os.isatty(0):
     pass1 = getpass.getpass("Enter the user's new password: ")
     pass2 = getpass.getpass("Please type it again for verification: ")
