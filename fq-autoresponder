@@ -12,6 +12,16 @@ DEFAULT_TIMELIMIT = 3600
 MAX_MSGLIMIT = 3
 MIN_TIMELIMIT = 3600
 
+template = u"""Copy message: {copy_msg}
+Time limit: {time_limit}
+Message limit: {msg_limit}
+Response message follows.
+
+From: "{from_name}" <{from_user}@{domain}>
+Subject: {subject}
+
+{response}"""
+
 def msg(*args):
     print('{}: {}'.format(program, ' '.join(map(str, args))))
 
@@ -61,15 +71,12 @@ def do_list():
 
 def do_get(acct):
     data = request('GET', '/1/email/autoresponders/{}'.format(acct))
-    print('Copy message:', 'Yes' if data['copy_msg'] else 'No')
-    print('Time limit:', data['time_limit'])
-    print('Message limit:', data['msg_limit'])
-    print('Response message follows.')
-    print()
-    print('From: "{}" <{}@{}>'.format(data['from_name'], data['from_user'], domain))
-    print('Subject:', data['subject'])
-    print()
-    print(data['response'].rstrip())
+    data['copy_msg'] = 'Yes' if data['copy_msg'] else 'No'
+    data['domain'] = domain
+    try:
+        print(template.format(**data))
+    except UnicodeEncodeError:
+        die('Your terminal cannot encode the data in this response.\nCheck that your terminal is set to UTF-8 and try again.')
 
 def do_log(acct):
     data = request('GET', '/1/email/autoresponders/{}/log'.format(acct))
