@@ -70,7 +70,7 @@ def do_list():
         print(ar['name'])
 
 def do_get(acct):
-    data = request('GET', '/1/email/autoresponders/{}'.format(acct))
+    data = request('GET', '/1/email/accounts/{}/autoresponder'.format(acct))
     data['copy_msg'] = 'Yes' if data['copy_msg'] else 'No'
     data['domain'] = domain
     try:
@@ -79,7 +79,7 @@ def do_get(acct):
         die('Your terminal cannot encode the data in this response.\nCheck that your terminal is set to UTF-8 and try again.')
 
 def do_log(acct):
-    data = request('GET', '/1/email/autoresponders/{}/log'.format(acct))
+    data = request('GET', '/1/email/accounts/{}/autoresponder/log'.format(acct))
     log = data['log']
     if log:
         print('     Timestamp      Response? Email')
@@ -93,7 +93,7 @@ def do_log(acct):
         msg("There are no recent log entries for the '{}' autoresponder.".format(acct))
 
 def do_drop(acct):
-    request('DELETE', '/1/email/autoresponders/{}'.format(acct))
+    request('DELETE', '/1/email/accounts/{}/autoresponder'.format(acct))
     print("Autoresponder for '{}' has been dropped".format(acct))
 
 def do_set(acct, include, from_name, from_acct, subject, msg_limit=DEFAULT_MSGLIMIT, time_limit=DEFAULT_TIMELIMIT):
@@ -115,7 +115,7 @@ def do_set(acct, include, from_name, from_acct, subject, msg_limit=DEFAULT_MSGLI
 
     body = sys.stdin.read()
 
-    request('PUT', '/1/email/autoresponders/{}'.format(acct), {
+    request('PUT', '/1/email/accounts/{}/autoresponder'.format(acct), {
         'from_user': from_acct,
         'from_name': from_name,
         'response': body,
