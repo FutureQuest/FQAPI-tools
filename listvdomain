@@ -1,13 +1,13 @@
 #! /usr/bin/python3
 
 import fqapi
-client = fqapi.LocalClient()
+client = fqapi.WrappingLocalClient()
 
 def mailbox(row):
     disabled = '' if row['mailbox-enabled'] else '(disabled)'
     return 'vmspool/{}{}'.format(row['name'].replace('.', ':'), disabled) if row['has-mailbox'] else '-'
 
-_, _, data = client.request('GET', '/1/email/accounts')
+data = client.get('/1/email/accounts')
 print('User Mailbox Aliases')
 for row in data['accounts']:
     print(row['name'], mailbox(row), ' '.join(row['forwards']))

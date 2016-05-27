@@ -7,21 +7,19 @@ parser.add_argument('addresses', metavar='ADDRESS', type=str, nargs='*')
 args = parser.parse_args()
 
 import fqapi
-client = fqapi.LocalClient()
+client = fqapi.WrappingLocalClient()
 
 if '/' in args.username:
     print('vaddalias: Invalid username:', args.username)
     exit(1)
-try:
-    client.request('GET', '/1/email/accounts/{}'.format(args.username))
-except fqapi.Error as e:
-    if e.code == 404:
-        print('vaddalias: Invalid username:', args.username)
-    else:
-        print('vaddalias: API Error:', e.code, e.msg)
-    exit(1)
 
-client.request('PUT', '/1/email/accounts/{}'.format(args.username), {
+ref = '/1/email/accounts/{}'.format(args.username)
+client.errormsgs[404] = None
+client.errormsgs[200] = 'Username {!r} already exists'.format(args.username)
+client.get(ref)
+
+client.errormsgs[200] = None
+client.put(ref, {
     'name': args.username,
     'forwards': args.addresses,
     'mailbox-enabled': False,

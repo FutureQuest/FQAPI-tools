@@ -8,7 +8,7 @@ parser.add_argument('usernames', metavar='USERNAME', type=str, nargs='*')
 args = parser.parse_args()
 
 import fqapi
-client = fqapi.LocalClient()
+client = fqapi.WrappingLocalClient()
 
 def one_du(name, du):
     if ' ' in name or '"' in name:
@@ -24,7 +24,7 @@ def show_du(name, du):
         results = [ one_du(name, du['totals']) ]
     print(*results)
 
-_, _, data = client.request('GET', '/1/email/disk-usage')
+data = client.get('/1/email/disk-usage')
 du = data['disk-usage']
 for name in args.usernames or du:
     show_du(name, du[name])

@@ -6,14 +6,14 @@ parser.add_argument('usernames', metavar='USERNAME', type=str, nargs='+')
 args = parser.parse_args()
 
 import fqapi
-client = fqapi.LocalClient()
+client = fqapi.WrappingLocalClient()
 
-_, _, accounts = client.request('GET', '/1/email/accounts')
+accounts = client.get('/1/email/accounts')
 accounts = dict([ (a['name'], a) for a in accounts['accounts'] ])
 
 for username in args.usernames:
     if username not in accounts or accounts[username]['mailbox-enabled']:
         print("vdelalias: Error: Account named '{}' is not an alias".format(username))
         exit(100)
-    client.request('DELETE', '/1/email/accounts/{}'.format(username))
+    client.delete('/1/email/accounts/{}'.format(username))
     print("vdelalias: user '{}' successfully deleted.".format(username))
