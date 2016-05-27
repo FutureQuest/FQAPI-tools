@@ -15,7 +15,7 @@ if '/' in args.username:
     exit(1)
 try:
     client.request('GET', '/1/email/accounts/{}'.format(args.username))
-except Error as e:
+except fqapi.Error as e:
     if e.code == 404:
         print('vchalias: Invalid username:', args.username)
     else:
