@@ -17,7 +17,7 @@ def one_du(name, du):
 
 def show_du(name, du):
     if args.all:
-	results = [ one_du(name, du['inbox']) ]
+        results = [ one_du(name, du['inbox']) ]
         for name, duf in du['folders'].items():
             results.append(one_du(name, duf))
     else:
@@ -27,4 +27,4 @@ def show_du(name, du):
 _, _, data = client.request('GET', '/1/email/disk-usage')
 du = data['disk-usage']
 for name in args.usernames or du:
-        show_du(name, du[name])
+    show_du(name, du[name])
