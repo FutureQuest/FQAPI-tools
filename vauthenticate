@@ -1,5 +1,4 @@
-#! /usr/bin/python2
-from __future__ import print_function
+#! /usr/bin/python3
 
 import argparse
 parser = argparse.ArgumentParser(description='Test authentication against a mail account.')
@@ -9,7 +8,7 @@ args = parser.parse_args()
 import fqapi
 client = fqapi.LocalClient()
 
-password = raw_input().rstrip('\r\n')
+password = input().rstrip('\r\n')
 
 code, _, data = client.request('POST', '/1/email/authenticate', {
     'username': args.username,

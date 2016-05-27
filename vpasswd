@@ -1,5 +1,4 @@
-#! /usr/bin/python2
-from __future__ import print_function
+#! /usr/bin/python3
 import getpass, os
 
 import argparse
@@ -29,7 +28,7 @@ if os.isatty(0):
         print("vpasswd: error: passwords don't match")
         exit(1)
 else:
-    pass1 = raw_input()
+    pass1 = input()
 
 if pass1 == "":
     print("vpasswd: error: password is empty")

@@ -1,5 +1,4 @@
-#! /usr/bin/python2
-from __future__ import print_function
+#! /usr/bin/python3
 import grp, os, pwd, sys, time
 
 import fqapi
@@ -12,7 +11,7 @@ DEFAULT_TIMELIMIT = 3600
 MAX_MSGLIMIT = 3
 MIN_TIMELIMIT = 3600
 
-template = u"""Copy message: {copy_msg}
+template = """Copy message: {copy_msg}
 Time limit: {time_limit}
 Message limit: {msg_limit}
 Response message follows.
