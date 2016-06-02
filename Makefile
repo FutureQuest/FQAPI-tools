@@ -14,5 +14,5 @@ install:
 
 dist:
 	mkdir $(DISTDIR)
-	cp Makefile VERSION BIN $(BIN) $(DISTDIR)/
+	cp BIN Makefile NEWS VERSION $(BIN) $(DISTDIR)/
 	tar -czf $(DISTDIR).tar.gz $(DISTDIR) --remove-files

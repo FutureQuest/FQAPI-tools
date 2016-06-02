@@ -1,0 +1,10 @@
+-------------------------------------------------------------------------------
+Changes in version 1.1
+
+- Fixed some typos in error handling.
+
+- Ported sources to Python 3.
+
+- Rewrote to use new WrappingLocalClient helper class.
+
+-------------------------------------------------------------------------------
