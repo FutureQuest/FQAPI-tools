@@ -1,3 +1,6 @@
+- Improved handling errors from reading non-ASCII responses in
+  fq-autoresponder.
+
 -------------------------------------------------------------------------------
 Changes in version 1.1
 
