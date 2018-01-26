@@ -48,8 +48,9 @@ def usage(*msg):
     print("To delete the autoresponder, use:\n"
           " ",program,"drop ACCOUNT")
     print("To set up or modify an autoresponder, use:\n"
-          " ",program,"set ACCOUNT INCLUDE FROM-NAME FROM-ACCT SUBJECT [MSG-LIMIT TIME-LIMIT]\n"
-          "The body of the response must be fed in on standard input for the 'set' command.")
+          " ",program,"set ACCOUNT INCLUDE FROM-NAME FROM-ACCT SUBJECT [MSG-LIMIT TIME-LIMIT [FILENAME]]\n"
+          "For the 'set' command, the body of the response must be either fed in\n"
+          "on standard input or saved in FILENAME.")
     sys.exit(111)
 
 def validate(s, name, chars):
@@ -100,7 +101,9 @@ def do_drop(acct):
     request('DELETE', '/1/email/accounts/{}/autoresponder'.format(acct))
     print("Autoresponder for '{}' has been dropped".format(acct))
 
-def do_set(acct, include, from_name, from_acct, subject, msg_limit=DEFAULT_MSGLIMIT, time_limit=DEFAULT_TIMELIMIT):
+def do_set(acct, include, from_name, from_acct, subject,
+           msg_limit=DEFAULT_MSGLIMIT, time_limit=DEFAULT_TIMELIMIT,
+           filename=None):
     try:
         msg_limit = int(msg_limit)
     except:
@@ -118,7 +121,14 @@ def do_set(acct, include, from_name, from_acct, subject, msg_limit=DEFAULT_MSGLI
     request('GET', '/1/email/accounts/{}'.format(acct))
 
     try:
-        body = sys.stdin.read()
+        if filename:
+            try:
+                with open(filename, encoding='UTF-8') as fh:
+                    body = fh.read()
+            except FileNotFoundError:
+                die("Response file {:r} does not exist".format(filename))
+        else:
+            body = sys.stdin.read()
     except UnicodeEncodeError:
         die_unicode()
 
@@ -153,11 +163,9 @@ elif cmd == 'log':
 elif cmd == 'drop':
     do_drop(acct)
 elif cmd == 'set':
-    if len(sys.argv) == 7:
-        do_set(acct, *sys.argv[3:7])
-    elif len(sys.argv) == 9:
-        do_set(acct, *sys.argv[3:9])
-    else:
+    if len(sys.argv) < 7 or len(sys.argv) > 10:
         usage('Wrong number of command-line arguments for the "set" command')
+    else:
+        do_set(acct, *sys.argv[3:])
 else:
     usage('Unknown command "{}"'.format(cmd))
